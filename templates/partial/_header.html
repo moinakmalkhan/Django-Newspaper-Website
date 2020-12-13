@@ -1,0 +1,29 @@
+{% load static %}
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <a class="navbar-brand" href="#">My Newspaper</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li {% if '/' == request.path %} class="nav-item active" {% else %} class="nav-item" {% endif %}>
+        <a class="nav-link" href="{% url 'home' %}">Home </a>
+      </li>
+      <li {% if 'article' in request.path %} class="nav-item active" {% else %} class="nav-item" {% endif %}>
+        <a class="nav-link" href="{% url 'FavArticle' %}">My Favorite Category Articles</a>
+      </li>
+    </ul>
+    <div class="my-2 my-lg-0">
+      {% if request.user.id %}
+      Welcome <a href="{% url 'profile' %}"><b>{{request.user|upper }} </b></a>&nbsp;&nbsp;&nbsp;&nbsp;
+      <a href="{% url 'logout' %}"><button class="btn btn-dark">Logout</button></a>
+      {% else %}
+      <a href="{% url 'login' %}">Login</a>&nbsp;&nbsp;&nbsp;&nbsp;
+      <a href="{% url 'admin:login' %}">Login as admin</a>&nbsp;&nbsp;&nbsp;&nbsp;
+      <a href="{% url 'signup' %}">Sign Up</a>&nbsp;&nbsp;&nbsp;&nbsp;
+      {% endif %}
+    </div>
+  </div>
+</nav>

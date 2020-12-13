@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% comment %} {% load crispy_forms_tags %} {% endcomment %}
+{% load static %}
+{% load article_tags %}
+{% load humanize %}
+{% block title %}
+Articles
+{% endblock title %}
+{% block content %}
+<br>
+{% for article in articles %}
+<div class="jumbotron">
+    <h1 class="display-4">{{article.heading}}</h1>
+    <p class="lead">{{article.body|safe}}</p>
+
+    <p><b>Category: </b>{{article.category.name}}</p>
+    <button class="btn btn-success likearticle" id="likearticle{{article.id}}"
+        articleid={{article.id}}>{% like_unlike_btn article.likes request.user.id %}</button>
+    <button class="btn btn-info float-right addtofav" id="addtofav{{article.category.id}}"
+        categoryid={{article.category.id}}>{% add_category article.category request.user.id %}</button>
+    <br>
+    <br>
+    {% csrf_token %}
+    <span id="comments">
+        <div class="card btn-block" style="width:100%">
+            <ul class="list-group list-group-flush">
+
+                {% for comment in article.comments.all %}
+                <div id="comment_{{comment.id}}">
+                    <li class="list-group-item" style="width:100%">
+                        <div class="row">
+                            <div class="col-md-1">
+                                <img src="{{comment.user.profile_image.url}}" class=""
+                                    style="border-radius: 50%;margin:10px" width="70px" height="70px" alt="">
+                            </div>
+                            <div class="col-md-11">
+                                <b> {{comment.user.user}} </b>{{comment.date_time | timesince}} ago
+                                <br>
+                                <p id="displaycommenttext{{comment.id}}">{{comment.comment}}</p>
+                                <span class="dropdown float-left" style="width:90%">
+                                    <button class="btn btn-primary dropdown-toggle showreplybtn" id="replydropdown"
+                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="true"
+                                        articleid={{article.id}} commentid={{comment.id}}>Reply</button>
+
+                                    <button class="btn btn-danger float-right" id="deleteComment"
+                                        commentid={{comment.id}} style="margin-left:10px">Delete</button>
+                                    <button class="btn btn-warning float-right" id="editcomment"
+                                        commentid={{comment.id}}>Edit</button>
+                                    <div class="dropdown-menu btn-block" style="width:100%"
+                                        aria-labelledby="replydropdown">
+
+                                        <textarea class="dropdown-item" cols="30" rows="8" style="width:98%;margin:10px"
+                                            id="replyingtext{{comment.id}}" placeholder="Write your Reply"
+                                            autofocus></textarea>
+                                        <span class="dropdown-item">
+                                            <button type="button" id="replyingtextsubmit"
+                                                class="btn btn-success btn-block" commentid={{comment.id}}
+                                                articleid={{article.id}}>Submit</button>
+                                        </span>
+                                    </div>
+                                </span>
+                            </div>
+                        </div>
+                    </li>
+                </div>
+                <center>
+                    {% for reply in comment.reply.all %}
+                    <div id="reply_{{reply.id}}">
+                        <li class="list-group-item text-left mt-1" style="width:90%">
+                            <div class="row">
+                                <div class="col-md-1">
+                                    <img src="{{reply.user.profile_image.url}}" class="float-left"
+                                        style="border-radius: 50%;margin:10px" width="65px" height="65px" alt="">
+                                </div>
+                                <div class="col-md-11">
+                                    <b>{{reply.user.user}} </b>Replying {{reply.date_time | timesince}} ago<br>
+                                    <p id="displayreplyingtext{{reply.id}}">{{reply.comment}}</p>
+                                    <button class="btn btn-warning" id="editreply" replyid={{reply.id}}
+                                        commentid={{comment.id}}>Edit</button>
+
+                                    <button class="btn btn-danger" id="deletereply" replyid={{reply.id}}
+                                        commentid={{comment.id}}>Delete</button>
+                                </div>
+                            </div>
+                        </li>
+                    </div>
+                    {% endfor %}
+                    <span id="addmorereply{{comment.id}}"></span>
+                </center>
+                {% endfor %}
+                <span id="addcomment_{{article.id}}"></span>
+
+                <li class="list-group-item">
+                    <textarea cols="30" rows="5" style="width:100%" id="commenttext{{article.id}}"
+                        placeholder="Write your comment"></textarea>
+                    <input type="button" value="Submit" articleid={{article.id}} class="btn btn-block submitcomment">
+                </li>
+            </ul>
+        </div>
+
+    </span>
+</div>
+{% endfor %}
+{% endblock content %}
+{% block script %}
+{% include "articles/ajax.html" %}
+{% endblock script %}

@@ -1,0 +1,251 @@
+<script>
+
+    $(document).ready(function () {
+        $("body").on("click", 'button#deleteComment', function () {
+            if (confirm('Do you want to delete this comment ?')) {
+                let commentid = $(this).attr("commentid")
+                let csr = $("input[name=csrfmiddlewaretoken]").val()
+                $.ajax({
+                    url: "{% url 'deleteComment' %}",
+                    method: "POST",
+                    data: { commentid: commentid, csrfmiddlewaretoken: csr },
+                    dataType: 'json',
+                    success: function (data) {
+                        if (data.status == 200) {
+                            //alert("Success: Data successfully deleted.\nPlease reload the page for corrent result.")
+                            for (i of data.replyid) {
+                                $("#reply_" + i).html("")
+                            }
+                            $("#comment_" + commentid).html("")
+                        }
+                        else { alert("Error: " + data.error) }
+                    },
+                });
+            }
+        })
+        $("body").on("click", 'button#deletereply', function () {
+            if (confirm('Do you want to delete this reply ?')) {
+                let replyid = parseInt($(this).attr("replyid"))
+                let commentid = parseInt($(this).attr("commentid"))
+                let csr = $("input[name=csrfmiddlewaretoken]").val()
+                $.ajax({
+                    url: "{% url 'deleteReply' %}",
+                    method: "POST",
+                    data: {
+                        replyid: replyid, commentid: commentid, csrfmiddlewaretoken: csr
+                    },
+                    dataType: 'json',
+                    success: function (data) {
+                        if (data.status == 200) {
+                            //alert("Success: Data successfully deleted.\nPlease reload the page for corrent result.")
+                            $("#reply_" + replyid).html("")
+                        }
+                        else { alert("Error: " + data.error) }
+                    },
+                });
+            }
+        })
+        $("body").on("click", "button#replyingtextsubmit", function () {
+            let user = "{{request.user.id}}";
+            let article = $(this).attr("articleid");
+            let commentid = $(this).attr("commentid");
+            let readyid = $(this).attr("readyid");
+            let comment = $("#replyingtext" + commentid).val()
+            $("#replyingtext" + commentid).val("")
+            let csr = $("input[name=csrfmiddlewaretoken]").val()
+            if (user != "None") {
+                if (comment) {
+                    $.ajax({
+                        url: "{% url 'savecomment' %}",
+                        method: "POST",
+                        data: { comment: comment, commentid: commentid, article: article, user: user, csrfmiddlewaretoken: csr },
+                        dataType: 'json',
+                        success: function (data) {
+                            if (data.status == "Save") {
+                                //alert("Success: Data save successfully\nPlease reload the page for corrent result.")
+                                rep = $("#addmorereply" + commentid).html()
+
+                                rep += '<div id="reply_' + data.replyid + '">'
+                                    + '<li class="list-group-item text-left mt-1" style="width:90%">'
+                                    + '<div class="row">'
+                                    + '<div class="col-md-1">'
+                                    + '<img src="' + data.img + '" class="float-left"'
+                                    + 'style="border-radius: 50%;margin:10px" width="65px" height="65px" alt="">'
+                                    + '</div>'
+                                    + '<div class="col-md-11">'
+                                    + '<b>' + data.username + ' </b>Replying Just now<br>'
+                                    + '<p id="displayreplyingtext' + data.replyid + '">' + data.comment + '</p>'
+                                    + '<button class="btn btn-warning" id="editreply" replyid=' + data.replyid + ' commentid=' + data.commentid + '>Edit</button>&nbsp;'
+                                    + '<button class="btn btn-danger" id="deletereply" replyid=' + data.replyid + ' commentid=' + data.commentid + '>Delete</button>'
+                                    + '</div>'
+                                    + '</div>'
+                                    + "</li>"
+                                    + '</div>'
+                                rep = $("#addmorereply" + commentid).html(rep);
+                            }
+
+                            else {
+                                alert("Error: " + data.error)
+                            }
+                        },
+                    });
+                } else {
+                    alert("Please type reply")
+                }
+            }
+            else {
+                alert("Please Login before submit reply")
+            }
+        })
+        $("body").on('click', "button.addtofav", function () {
+            var action = $(this).text()
+            let categoryid = $(this).attr("categoryid")
+            let csr = $("input[name=csrfmiddlewaretoken]").val()
+            $.ajax({
+                url: "{% url 'addToFav' %}",
+                method: "POST",
+                data: { categoryid: categoryid, csrfmiddlewaretoken: csr, action: action },
+                dataType: 'json',
+                success: function (data) {
+                    if (data.status == "Save") {
+                        if (action == "Remove from favorite") { $("#addtofav" + categoryid).text("Add to favorite") }
+                        else {
+                            $("#addtofav" + categoryid).text("Remove from favorite")
+                        }
+                    }
+                    else { alert("Error: " + data.error) }
+                },
+            });
+
+
+        })
+        $("body").on('click', "button.likearticle", function () {
+            var action = $(this).text()
+            let articleid = $(this).attr("articleid")
+            let csr = $("input[name=csrfmiddlewaretoken]").val()
+            $.ajax({
+                url: "{% url 'addLikes' %}",
+                method: "POST",
+                data: { articleid: articleid, csrfmiddlewaretoken: csr, action: action },
+                dataType: 'json',
+                success: function (data) {
+                    if (data.status == "Save") {
+                        if (action == "UnLike") { $("#likearticle" + articleid).text("Like") }
+                        else { $("#likearticle" + articleid).text("UnLike") }
+                    }
+                    else { alert("Error: " + data.error) }
+                },
+            });
+        })
+
+        $("body").on("click", "button#editcomment", function () {
+            let commentid = $(this).attr("commentid")
+            let txt = $("#displaycommenttext" + commentid).text()
+            let user = "{{request.user.id}}";
+            let text = prompt("Edit Comment", txt);
+            let csr = $("input[name=csrfmiddlewaretoken]").val()
+            let url = "{% url 'savecomment' %}" + commentid + "/"
+            if (text) {
+                $.ajax({
+                    url: url,
+                    method: "POST",
+                    data: { comment: text, csrfmiddlewaretoken: csr, user: user },
+                    dataType: 'json',
+                    success: function (data) {
+                        if (data.status == "Save") {
+                            //alert("Success: Data successfully edit\nPlease reload the page for corrent result.")
+                            $("#displaycommenttext" + commentid).text(text)
+                        }
+                        else { alert("Error: " + data.error) }
+                    },
+                });
+            }
+        })
+
+        $("body").on('click', "button#editreply", function () {
+            let replyid = $(this).attr("replyid")
+            let commentid = $(this).attr("commentid")
+            let csr = $("input[name=csrfmiddlewaretoken]").val()
+            let user = "{{request.user.id}}";
+
+            let txt = $("#displayreplyingtext" + replyid).text()
+            let text = prompt("Edit Reply", txt);
+            let url = "{% url 'savecomment' %}" + commentid + "/"
+            $.ajax({
+                url: url,
+                method: "POST",
+                data: { comment: text, commentid: replyid, csrfmiddlewaretoken: csr, user: user },
+                dataType: 'json',
+                success: function (data) {
+                    if (data.status == "Save") {
+                        //alert("Success: Data successfully edit\nPlease reload the page for corrent result.")
+                        $("#displayreplyingtext" + replyid).text(text)
+
+                    }
+                    else { alert("Error: " + data.error) }
+                },
+            });
+
+
+        })
+        $(".submitcomment").on("click", function () {
+            let article = parseInt($(this).attr("articleid"))
+            let comment = $("#commenttext" + article).val();
+            let user = "{{request.user.id}}";
+            let csr = $("input[name=csrfmiddlewaretoken]").val()
+            if (user != "None") {
+                if (comment) {
+                    $.ajax({
+                        url: "{% url 'savecomment' %}",
+                        method: "POST",
+                        data: {
+                            comment: comment, article: article, user: user, csrfmiddlewaretoken: csr
+                        },
+                        dataType: 'json',
+                        success: function (data) {
+                            if (data.status == "Save") {
+                                //alert("Success: Data save successfully\nPlease reload the page for corrent result.")
+                                html = '<div id="comment_' + data.commentid + '">'
+                                    + '<li class="list-group-item" style="width:100%">'
+                                    + '<div class="row">'
+                                    + '<div class="col-md-1">'
+                                    + '<img src="' + data.img + '" style="border-radius: 50%;margin:10px"'
+                                    + 'width="70px" height="70px" alt="">'
+                                    + '</div>'
+                                    + '<div class="col-md-11">'
+                                    + '<b>' + data.username + ' </b> Just now'
+                                    + '<br>'
+                                    + '<p id="displaycommenttext' + data.commentid + '">' + data.comment + '</p>'
+                                    + '<span class="dropdown float-left" style="width:90%">'
+                                    + '<button class="btn btn-primary dropdown-toggle showreplybtn" id="replydropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" articleid=' + article + ' commentid=' + data.commentid + '>Reply</button>'
+
+                                    + '<button class="btn btn-danger float-right" id="deleteComment" commentid=' + data.commentid + ' style="margin-left:10px">Delete</button>'
+                                    + '<button class="btn btn-warning float-right" id="editcomment"  commentid=' + data.commentid + '>Edit</button>'
+                                    + '<div class="dropdown-menu btn-block" style="width:100%" aria-labelledby="replydropdown">'
+
+                                    + ' <textarea class="dropdown-item" cols="30" rows="8" style="width:98%;margin:10px" id="replyingtext' + data.commentid + '" placeholder="Write your Reply" autofocus></textarea>'
+                                    + '<span class="dropdown-item">'
+                                    + '<button type="button" id="replyingtextsubmit" class="btn btn-success btn-block" commentid=' + data.commentid + ' articleid=' + article + '>Submit</button>'
+                                    + '</span>'
+                                    + '</div>'
+                                    + '</span>'
+                                    + '</div>'
+                                    + '</div>'
+                                    + '</li>'
+                                    + '</div><center><span id="addmorereply' + data.commentid + '"></span><center>'
+
+                                data = $("#addcomment_" + article).html()
+                                data += html
+                                data = $("#addcomment_" + article).html(data)
+
+                            }
+                            else { alert("Error: " + data.error) }
+                        },
+                    });
+                } else { alert("Please type comment") }
+            }
+            else { alert("Please Login before submit comment") }
+
+        })
+    })
+</script>
