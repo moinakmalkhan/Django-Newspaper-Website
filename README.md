@@ -6,8 +6,6 @@
 - link: https://myaccount.google.com/lesssecureapps
 ### Run following commands
 - pip install -r requirement.txt
-- python manage.py makemigration
-- python manage.py migrate
 - python manage.py runserver
 
 ## Requirements
