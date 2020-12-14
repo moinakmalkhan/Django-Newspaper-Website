@@ -61,7 +61,7 @@ ROOT_URLCONF = 'newspaper.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ["templates"],
+        'DIRS': [BASE_DIR/"templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -129,7 +129,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR/"static"
 STATICFILES_DIR = [
-    BASE_DIR/"pages/static"
+    BASE_DIR/"articles/static"
 ]
 
 # Set Media Settings

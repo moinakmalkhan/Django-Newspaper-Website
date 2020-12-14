@@ -6,7 +6,7 @@ More Profile Setting
 {% block content %}
 
 
-<form action="{% url 'ProfileSetting' %}{{request.user.id}}/" method='post' enctype="multipart/form-data">
+<form action="{% url 'ProfileSetting' %}" method='post' enctype="multipart/form-data">
     {% csrf_token %}
     {{ form|crispy }}
     <br>
